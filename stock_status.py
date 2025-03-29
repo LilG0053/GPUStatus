@@ -1,6 +1,5 @@
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
@@ -15,7 +14,6 @@ import product as p
 import keyboard
 import sys
 import atexit
-import url_file
 import random
 
 def send_sms(message):
@@ -41,7 +39,10 @@ def try_get_element(driver, by, value):
         return None
 
 def get_site_name(url):
-    return url.split(".")[1]
+    try:
+        return url.split(".")[1]
+    except:
+        raise Exception("Unable to get site name from URL: " + str(url))
 
 def strip_non_unicode(text):
     return ''.join([i if ord(i) < 128 else ' ' for i in text])
@@ -105,7 +106,7 @@ colors = colors.bcolors()
 #options.add_argument("--headless")
 # options.set_preference("permissions.default.image", 2)  # Disable images
 # options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", "false")  # Disable flash
-driver = webdriver.Chrome(options=options)
+driver = webdriver.Firefox(options=options)
 atexit.register(exit_handler)
 ph = print_handler.ph()
 plr = prod_links_retriever.link_retriever()
@@ -124,7 +125,7 @@ while True:
         data[idx] = prod
         if not prod.name or prod.price == "." or prod.unavailable:
             ph.printNotAvailable(prod.name)
-        elif (int(prod.price.split(".")[0].replace(",", "")) < 750) and (prod.unavailable == False):
+        elif (int(prod.price.split(".")[0].replace(",", "")) < 780) and (prod.unavailable == False):
             send_sms(f"GPU ALERT: {URL}")
             print(f"{colors.OKGREEN}Product is available{colors.ENDC} for ${prod.price}. Find it here: {URL}")
         else:
