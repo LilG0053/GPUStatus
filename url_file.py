@@ -1,5 +1,5 @@
 urls = [
-        "https://www.newegg.com/msi-rtx-5070-ti-16g-shadow-3x-nvidia-geforce-rtx-5070-ti-16gb-gddr7/p/N82E16814137947?Item=N82E16814137947&utm_campaign=afc-ran-com-_-NowInStock&cm_mmc=afc-ran-com-_-NowInStock&ranMID=44583&AFFID=1709054&ranSiteID=AKGBlS8SPlM-79Dstf3D77NUPs6LsZYy7A&AFFNAME=NowInStock&ASUBID=nismain&ACRID=1&ASID=https%3A%2F%2Fwww.nowinstock.net%2F&nm_mc=AFC-RAN-COM&ranEAID=1709054&utm_source=afc-NowInStock&utm_medium=affiliate",
+    "https://www.newegg.com/msi-rtx-5070-ti-16g-shadow-3x-nvidia-geforce-rtx-5070-ti-16gb-gddr7/p/N82E16814137947?Item=N82E16814137947&utm_campaign=afc-ran-com-_-NowInStock&cm_mmc=afc-ran-com-_-NowInStock&ranMID=44583&AFFID=1709054&ranSiteID=AKGBlS8SPlM-79Dstf3D77NUPs6LsZYy7A&AFFNAME=NowInStock&ASUBID=nismain&ACRID=1&ASID=https%3A%2F%2Fwww.nowinstock.net%2F&nm_mc=AFC-RAN-COM&ranEAID=1709054&utm_source=afc-NowInStock&utm_medium=affiliate",
     "https://www.amazon.com/ASRock-Accelerators-Graphics-Deflecting-DisplayPort/dp/B0DTTGMFK3/",
     "https://www.amazon.com/dp/B0DRRDLC8J/?tag=fixitservices-20&aod=1",
     "https://www.amazon.com/dp/B0CVVLV5TV/?tag=fixitservices-20&aod=1",
@@ -21,4 +21,9 @@ urls = [
     "https://www.newegg.com/asus-prime-rx9070xt-o16g-amd-radeon-rx-9070-xt-16gb-gddr6/p/N82E16814126746?Item=N82E16814126746&nm_mc=AFC-RAN-COM&utm_campaign=afc-ran-com-_-NowInStock&cm_mmc=afc-ran-com-_-NowInStock&ranMID=44583&AFFID=1709054&ranSiteID=AKGBlS8SPlM-JctdkhksXWeAL8lmRILuQg&ranEAID=1709054&AFFNAME=NowInStock&ACRID=1&ASUBID=nismain&utm_source=afc-NowInStock&ASID=https%3A%2F%2Fwww.nowinstock.net%2F&utm_medium=affiliate",
     "https://www.newegg.com/asrock-challenger-rx9070-cl-16g-amd-radeon-rx-9070-16gb-gddr6/p/N82E16814932750?Item=N82E16814932750&cm_mmc=afc-ran-com-_-NowInStock&ranMID=44583&ACRID=1&ASUBID=nismain&nm_mc=AFC-RAN-COM&ASID=https%3A%2F%2Fwww.nowinstock.net%2F&utm_source=afc-NowInStock&utm_medium=affiliate&ranSiteID=AKGBlS8SPlM-wjOqYgrBS0_Jk6JpYw3ZSQ&utm_campaign=afc-ran-com-_-NowInStock&ranEAID=1709054&AFFNAME=NowInStock&AFFID=1709054",
     "https://www.newegg.com/p/N82E16814133900?Item=N82E16814133900&nm_mc=AFC-RAN-COM&cm_mmc=afc-ran-com-_-NowInStock&utm_medium=affiliate&utm_campaign=afc-ran-com-_-NowInStock&utm_source=afc-NowInStock&AFFID=1709054&AFFNAME=NowInStock&ACRID=1&ASUBID=nismain&ASID=https%3A%2F%2Fwww.nowinstock.net%2F&ranMID=44583&ranEAID=1709054&ranSiteID=AKGBlS8SPlM-4GtRlVNpz8ukkVNQD7et8g",
+    "https://www.amazon.com/dp/B0DXL7GSYC?tag=nisamain-20&linkCode=ogi&th=1&psc=1&m=ATVPDKIKX0DER&aod=1",
+    "https://www.newegg.com/zotac-rtx-5070-ti-solid-oc-nvidia-geforce-rtx-5070-ti-16gb-gddr7/p/N82E16814500601?Item=N82E16814500601&AFFNAME=NowInStock&ACRID=1&ASUBID=nismain&cm_mmc=afc-ran-com-_-NowInStock&ASID=&nm_mc=AFC-RAN-COM&ranMID=44583&ranSiteID=AKGBlS8SPlM-.W5RS5PyVZml3lO7yyY4Mg&utm_campaign=afc-ran-com-_-NowInStock&utm_source=afc-NowInStock&ranEAID=1709054&AFFID=1709054&utm_medium=affiliate",
+    "https://www.amazon.com/dp/B0DXWKQNCH?tag=nismain-20&linkCode=ogi&th=1&psc=1&m=ATVPDKIKX0DER&aod=1",
+    "https://www.amazon.com/dp/B0DS6WFRBP/?tag=fixitservices-20&aod=1",
+    "https://www.amazon.com/dp/B0DS2QZ8FN/?tag=fixitservices-20&aod=1",
 ]
