@@ -16,21 +16,25 @@ import sys
 import atexit
 import random
 import concurrent.futures
+import threading
 
+#Global shared event to notify threads to exit
+exit_event = threading.Event()
+#global colors bc im lazy
+colors = colors.bcolors()
 def send_sms(message):
     send_sms_via_email(message_info.phone_number, strip_non_unicode(message), message_info.provider, message_info.sender_credentials, subject="sent using etext")    
     print("ALERT SENT! GPU IN STOCK! Message: " + message)
-    sys.exit()
+    exit_event.set()
     
 def checkEsc():
     if keyboard.is_pressed("esc"):
         print("Exiting program...")
-        driver.quit()
-        sys.exit()
+        exit_event.set()
 
 def exit_handler():
     #make sure firefox closes when the program exits
-    driver.quit()
+    print("Exiting and quitting all drivers")
 
 def try_get_element(driver, by, value):
     try:
@@ -111,20 +115,24 @@ def create_driver():
 
 def process_product_chunk(driver, chunk, ph):
     driver = create_driver()  # Create one driver per chunk
-    for URL in chunk:   
-        checkEsc()
-        site = get_site_name(URL)
-        driver.get(URL)
-        prod = process_site(site, driver)
-        if not prod.name or prod.price == "." or prod.unavailable:
-            ph.printNotAvailable(prod.name)
-        elif (int(prod.price.split(".")[0].replace(",", "")) < 800) and (prod.unavailable == False):
-            send_sms(f"GPU ALERT: {URL}")
-            print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for ${prod.price}. Find it here: {URL}")
-        else:
-            print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for ${prod.price}. Find it here: {URL}")
-    driver.quit()
-colors = colors.bcolors()
+    while True:
+        for URL in chunk:   
+            checkEsc()
+            if exit_event.is_set():
+                print("Exiting program...")
+                driver.quit()
+                return
+            site = get_site_name(URL)
+            driver.get(URL)
+            prod = process_site(site, driver)
+            if not prod.name or prod.price == "." or prod.unavailable:
+                ph.printNotAvailable(prod.name)
+            elif (int(prod.price.split(".")[0].replace(",", "")) < 800) and (prod.unavailable == False):
+                send_sms(f"GPU ALERT: {URL}")
+                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for ${prod.price}. Find it here: {URL}")
+            else:
+                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for ${prod.price}. Find it here: {URL}")
+
 #options.add_argument("--headless")
 # options.set_preference("permissions.default.image", 2)  # Disable images
 # options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", "false")  # Disable flash
@@ -137,9 +145,12 @@ def main():
     URLs = plr.fetch_and_check_products(driver)
     print("Hold escape to exit the program. ")
     chunk_size = 5
+    driver.quit()
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         while True:
-            checkEsc()
+            if exit_event.is_set():  # Check if exit event is triggered
+                print("Exiting program due to escape key press.")
+                break  # Exit the loop and terminate the program
             futures = []
             for i in range(0, len(URLs), chunk_size):
                 chunk = URLs[i:i + chunk_size]
@@ -148,6 +159,8 @@ def main():
             # Wait for all futures to complete
             concurrent.futures.wait(futures)
             time.sleep(1)
+    print("All threads have finished. Exiting the program.")
+    
 if __name__ == "__main__":
     main()
                 
