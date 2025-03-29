@@ -15,6 +15,7 @@ import keyboard
 import sys
 import atexit
 import random
+import concurrent.futures
 
 def send_sms(message):
     send_sms_via_email(message_info.phone_number, strip_non_unicode(message), message_info.provider, message_info.sender_credentials, subject="sent using etext")    
@@ -95,39 +96,58 @@ def process_site(site, driver):
         raise Exception("Unknown site for site name: " + site)
     return prod
 
-user_agents = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-]
-driver = None
-options = Options()
-options.add_argument(f"user-agent={random.choice(user_agents)}")
-colors = colors.bcolors()
-#options.add_argument("--headless")
-# options.set_preference("permissions.default.image", 2)  # Disable images
-# options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", "false")  # Disable flash
-driver = webdriver.Firefox(options=options)
-atexit.register(exit_handler)
-ph = print_handler.ph()
-plr = prod_links_retriever.link_retriever()
-URLs = plr.fetch_and_check_products(driver)
-print("Hold escape to exit the program. ")
-data = {}
-unavailable = False
-while True:
-    #check if user is trying to escape
-    checkEsc()
-    for idx, URL in enumerate(URLs):  
+def create_driver():
+    user_agents = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    ]
+    driver = None
+    options = Options()
+    options.set_preference("dom.webdriver.enabled", False)  # Disable webdriver flag
+    options.set_preference("permissions.default.image", 2)  # Disable webdriver flag
+    options.set_preference("javascript.enabled", True)  # Enable JavaScript
+    options.add_argument(f"user-agent={random.choice(user_agents)}")
+    return webdriver.Firefox(options=options)
+
+def process_product_chunk(driver, chunk, ph):
+    driver = create_driver()  # Create one driver per chunk
+    for URL in chunk:   
         checkEsc()
         site = get_site_name(URL)
         driver.get(URL)
         prod = process_site(site, driver)
-        data[idx] = prod
         if not prod.name or prod.price == "." or prod.unavailable:
             ph.printNotAvailable(prod.name)
-        elif (int(prod.price.split(".")[0].replace(",", "")) < 780) and (prod.unavailable == False):
+        elif (int(prod.price.split(".")[0].replace(",", "")) < 800) and (prod.unavailable == False):
             send_sms(f"GPU ALERT: {URL}")
-            print(f"{colors.OKGREEN}Product is available{colors.ENDC} for ${prod.price}. Find it here: {URL}")
+            print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for ${prod.price}. Find it here: {URL}")
         else:
-            print(f"{colors.OKGREEN}Product is available{colors.ENDC} for ${prod.price}. Find it here: {URL}")
+            print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for ${prod.price}. Find it here: {URL}")
+    driver.quit()
+colors = colors.bcolors()
+#options.add_argument("--headless")
+# options.set_preference("permissions.default.image", 2)  # Disable images
+# options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", "false")  # Disable flash
+        
+def main():
+    driver = create_driver()
+    atexit.register(exit_handler)
+    ph = print_handler.ph()
+    plr = prod_links_retriever.link_retriever()
+    URLs = plr.fetch_and_check_products(driver)
+    print("Hold escape to exit the program. ")
+    chunk_size = 5
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        while True:
+            checkEsc()
+            futures = []
+            for i in range(0, len(URLs), chunk_size):
+                chunk = URLs[i:i + chunk_size]
+                futures.append(executor.submit(process_product_chunk, driver, chunk, ph))
+
+            # Wait for all futures to complete
+            concurrent.futures.wait(futures)
+            time.sleep(1)
+if __name__ == "__main__":
+    main()
                 
