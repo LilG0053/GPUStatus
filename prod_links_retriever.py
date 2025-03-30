@@ -4,6 +4,7 @@ import requests
 import time
 import re
 import random
+import json
 class link_retriever:
     def __init__(self):
         self.product_links = set()
@@ -22,7 +23,28 @@ class link_retriever:
         except requests.RequestException as e:
             print(f"Error with URL {url}: {e}")
             return False  # Invalid URL if there's an error or if the request fails
+    
+    def save_and_load_urls_to_file(self, new_url_list, filename='backup_urls.json'):
+        try:
+            with open(filename, 'r') as f:
+                existing_urls = set(json.load(f))
+            print(f"New URLs saved to {filename}")
+        except (FileNotFoundError, json.JSONDecodeError):
+            existing_urls = set()
+        
+        new_urls_to_save = [url for url in new_url_list if url not in existing_urls]
+        
+        if new_urls_to_save:
+            existing_urls.update(new_urls_to_save)
             
+            with open(filename, 'w') as f:
+                json.dump(list(existing_urls), f)
+            print(f"Added {len(new_urls_to_save)} new URLs to {filename}")
+        else:
+            print("No new URLs to save.")
+        
+        return list(existing_urls)
+                        
     def fetch_and_check_products(self, driver):
         # Define search terms
         amazon_search_query = "5070ti"
@@ -34,13 +56,14 @@ class link_retriever:
         self.get_amazon_product_links(driver, amazon_search_query)
         self.get_newegg_product_links(driver, newegg_search_query)
         for url in urls:
+            time.sleep(random.random() * 0.1)  # dont spam with requests
             if self.is_valid_url(url):
                 # If the URL is valid, add it to the set of product links
                 self.product_links.add(url)
             else:
                 print(f"Skipping invalid url: {url}")
         print(f"Total product links found: {len(self.product_links)}")
-        return list(self.product_links) #convert set to list for easier handling
+        return self.save_and_load_urls_to_file(self.product_links, 'backup_urls.json')
     
     def get_amazon_product_links(self, driver, search_query):
         amazon_url = f"https://www.amazon.com/s?k={search_query}"

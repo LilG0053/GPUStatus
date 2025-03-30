@@ -117,7 +117,8 @@ def create_driver():
 def process_product_chunk(driver, chunk, ph):
     driver = create_driver()  # Create one driver per chunk
     while True:
-        for URL in chunk:   
+        for URL in chunk:
+            print(f"Checking {URL}...") 
             checkEsc()
             if exit_event.is_set():
                 print("Exiting program...")
@@ -129,7 +130,7 @@ def process_product_chunk(driver, chunk, ph):
             if not prod.name or prod.price == "." or prod.unavailable:
                 ph.printNotAvailable(prod.name)
             elif (int(prod.price.split(".")[0].replace(",", "")) < 850) and (prod.unavailable == False):
-                send_sms(f"GPU ALERT: {URL}")
+                send_sms(f"GPU ALERT: {URL}. Product: {prod.name}.")
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
             else:
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
@@ -153,8 +154,8 @@ def main():
                 print("Exiting program due to escape key press.")
                 break  # Exit the loop and terminate the program
             futures = []
-            for i in range(0, len(URLs), chunk_size):
-                chunk = URLs[i:i + chunk_size]
+            for i in range(0, len(URLs), len(URLs) // chunk_size):
+                chunk = URLs[i:i + (len(URLs) // chunk_size)]
                 futures.append(executor.submit(process_product_chunk, driver, chunk, ph))
 
             # Wait for all futures to complete
