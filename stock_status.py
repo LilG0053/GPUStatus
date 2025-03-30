@@ -95,6 +95,20 @@ def process_site(site, driver):
         price = driver.find_element(By.CLASS_NAME, "price-current").find_element(By.TAG_NAME, "strong").text
         unavailable = driver.find_element(By.CLASS_NAME, "message-information").text
         prod = p.product(product_name, price, unavailable)
+    elif site == "bestbuy":
+        print("processing bestbuy")
+        try:
+            time.sleep(1)
+            raw_product_name = WebDriverWait(driver, 5).until(
+                        EC.visibility_of_element_located((By.TAG_NAME, "h1"))
+                    ).text
+        except:
+            print("Unable to find product name on Best Buy page.")
+        product_name = raw_product_name.replace("(", "").replace(")", "").replace(",", "").replace("-", "")
+        price = driver.find_element(By.CLASS_NAME, "priceView-hero-price").find_element(By.TAG_NAME, "span").text
+        btn_text = driver.find_element(By.XPATH, "//button[contains(@class, 'add-to-cart-button')]").text
+        unavailable = btn_text == "Coming Soon" or btn_text == "Unavailable Nearby" or btn_text == "Sold Out"
+        prod = p.product(product_name, price, unavailable)
     else:
         raise Exception("Unknown site for site name: " + site)
     return prod
@@ -109,6 +123,10 @@ def create_driver():
     ]
     driver = None
     options = Options()
+    options.set_preference("dom.geo.enabled", False)
+    options.set_preference("permissions.default.geo", 2)
+    options.set_preference("dom.push.enabled", False)
+    options.set_preference("dom.webnotifications.enabled", False)  # Disable notifications
     options.set_preference("dom.webdriver.enabled", False)  # Disable webdriver flag
     options.set_preference("permissions.default.image", 2)  # Disable webdriver flag
     options.add_argument(f"user-agent={random.choice(user_agents)}")
