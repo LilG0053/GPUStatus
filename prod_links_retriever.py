@@ -123,7 +123,7 @@ class link_retriever:
     
     def is_not_PC(self, title):
         # Use regular expression to ensure the title doesn't contain "pc" or "gaming pc"
-        invalid_keywords = [r"\bgaming pc\b", r"\bdesktop\b", r"\bcomputer\b", r"\blaptop\b"]
+        invalid_keywords = [r"\bgaming pc\b", r"\bdesktop\b", r"\bcomputer\b", r"\bcable\b", r"\blaptop\b"]
         return not any(re.search(keyword, title) for keyword in invalid_keywords)
     
     def trim_url(self, url):
