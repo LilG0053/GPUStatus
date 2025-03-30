@@ -12,7 +12,6 @@ import print_handler
 import time
 import product as p
 import keyboard
-import sys
 import atexit
 import random
 import concurrent.futures
