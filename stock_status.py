@@ -25,7 +25,6 @@ colors = colors.bcolors()
 def send_sms(message):
     send_sms_via_email(message_info.phone_number, strip_non_unicode(message), message_info.provider, message_info.sender_credentials, subject="sent using etext")    
     print("ALERT SENT! GPU IN STOCK! Message: " + message)
-    exit_event.set()
     
 def checkEsc():
     if keyboard.is_pressed("esc"):
@@ -102,14 +101,16 @@ def process_site(site, driver):
 
 def create_driver():
     user_agents = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6301.195 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.6267.195 Safari/537.36 OPR/103.0.4784.198',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'
     ]
     driver = None
     options = Options()
     options.set_preference("dom.webdriver.enabled", False)  # Disable webdriver flag
     options.set_preference("permissions.default.image", 2)  # Disable webdriver flag
-    options.set_preference("javascript.enabled", True)  # Enable JavaScript
     options.add_argument(f"user-agent={random.choice(user_agents)}")
     return webdriver.Firefox(options=options)
 
@@ -127,11 +128,11 @@ def process_product_chunk(driver, chunk, ph):
             prod = process_site(site, driver)
             if not prod.name or prod.price == "." or prod.unavailable:
                 ph.printNotAvailable(prod.name)
-            elif (int(prod.price.split(".")[0].replace(",", "")) < 800) and (prod.unavailable == False):
+            elif (int(prod.price.split(".")[0].replace(",", "")) < 850) and (prod.unavailable == False):
                 send_sms(f"GPU ALERT: {URL}")
-                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for ${prod.price}. Find it here: {URL}")
+                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
             else:
-                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for ${prod.price}. Find it here: {URL}")
+                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
 
 #options.add_argument("--headless")
 # options.set_preference("permissions.default.image", 2)  # Disable images
@@ -144,9 +145,9 @@ def main():
     plr = prod_links_retriever.link_retriever()
     URLs = plr.fetch_and_check_products(driver)
     print("Hold escape to exit the program. ")
-    chunk_size = 5
+    chunk_size = 3
     driver.quit()
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=chunk_size) as executor:
         while True:
             if exit_event.is_set():  # Check if exit event is triggered
                 print("Exiting program due to escape key press.")
