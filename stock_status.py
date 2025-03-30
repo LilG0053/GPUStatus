@@ -147,7 +147,7 @@ def process_product_chunk(driver, chunk, ph):
             prod = process_site(site, driver)
             if not prod.name or prod.price == "." or prod.unavailable:
                 ph.printNotAvailable(prod.name)
-            elif (int(prod.price.split(".")[0].replace(",", "")) < 850) and (prod.unavailable == False):
+            elif (int(prod.price.split(".")[0].replace(",", "")) < 899) and (prod.unavailable == False):
                 send_sms(f"GPU ALERT: {URL}. Product: {prod.name}.")
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
             else:

@@ -5,6 +5,7 @@ import time
 import re
 import random
 import json
+import urllib
 class link_retriever:
     def __init__(self):
         self.product_links = set()
@@ -111,6 +112,7 @@ class link_retriever:
         self.get_newegg_product_links(driver, xt_search_query)
         for url in urls:
             time.sleep(random.random() * 0.1)  # dont spam with requests
+            url = self.trim_url(url)
             if self.is_valid_url(url):
                 # If the URL is valid, add it to the set of product links
                 self.product_links.add(url)
@@ -123,3 +125,9 @@ class link_retriever:
         # Use regular expression to ensure the title doesn't contain "pc" or "gaming pc"
         invalid_keywords = [r"\bgaming pc\b", r"\bdesktop\b", r"\bcomputer\b", r"\blaptop\b"]
         return not any(re.search(keyword, title) for keyword in invalid_keywords)
+    
+    def trim_url(self, url):
+        # Remove query parameters from the URL
+        parsed_url = urllib.parse.urlparse(url)
+
+        return urllib.parse.urlunparse(parsed_url._replace(query='', fragment=''))
