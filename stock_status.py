@@ -6,7 +6,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from etext import send_sms_via_email
 import prod_links_retriever
-import message_info
+import requests
+import asyncio
 import bcolors as colors
 import print_handler
 import time
@@ -16,15 +17,18 @@ import atexit
 import random
 import concurrent.futures
 import threading
+import asyncio
+import gpu_discord_bot
+import sys
+
 
 #Global shared event to notify threads to exit
 exit_event = threading.Event()
 #global colors bc im lazy
 colors = colors.bcolors()
-def send_sms(message):
-    send_sms_via_email(message_info.phone_number, strip_non_unicode(message), message_info.provider, message_info.sender_credentials, subject="sent using etext")    
-    print("ALERT SENT! GPU IN STOCK! Message: " + message)
-    
+
+gpu_discord_bot = gpu_discord_bot.gpu_discord_bot()
+
 def checkEsc():
     if keyboard.is_pressed("esc"):
         print("Exiting program...")
@@ -53,6 +57,7 @@ def strip_non_unicode(text):
 def process_site(site, driver):
     if site == "amazon":
         try:
+            time.sleep(0.746)
             raw_product_name = WebDriverWait(driver, 1).until(
                         EC.visibility_of_element_located((By.ID, "title"))
                     ).text
@@ -120,14 +125,13 @@ def create_driver():
     'Mozilla/5.0 (iPhone; CPU iPhone OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1',
     'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Mobile Safari/537.36'
     ]
-    driver = None
     options = Options()
     options.set_preference("dom.geo.enabled", False)
     options.set_preference("permissions.default.geo", 2)
     options.set_preference("dom.push.enabled", False)
     options.set_preference("dom.webnotifications.enabled", False)  # Disable notifications
     options.set_preference("dom.webdriver.enabled", False)  # Disable webdriver flag
-    options.set_preference("permissions.default.image", 2)  # Disable webdriver flag
+    #options.set_preference("permissions.default.image", 2)  # Disable webdriver flag
     options.add_argument(f"user-agent={random.choice(user_agents)}")
     return webdriver.Firefox(options=options)
 
@@ -146,8 +150,8 @@ def process_product_chunk(driver, chunk, ph):
             prod = process_site(site, driver)
             if not prod.name or prod.price == "." or prod.unavailable:
                 ph.printNotAvailable(prod.name)
-            elif (int(prod.price.split(".")[0].replace(",", "")) < 899) and (prod.unavailable == False):
-                send_sms(f"GPU ALERT: {URL}. Product: {prod.name}.")
+            elif (int(prod.price.split(".")[0].replace(",", "")) < 890) and (prod.unavailable == False):
+                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."))
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
             else:
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
@@ -155,13 +159,19 @@ def process_product_chunk(driver, chunk, ph):
 #options.add_argument("--headless")
 # options.set_preference("permissions.default.image", 2)  # Disable images
 # options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", "false")  # Disable flash
-        
+
 def main():
+    skip_collection = False
+    #if argument is passed, skip the collection of product links
+    if sys.argv[1] == "SKIP":
+        skip_collection = True
+        
+    asyncio.run(gpu_discord_bot.send_discord_message("Scanning for GPUs..."))
     driver = create_driver()
     atexit.register(exit_handler)
     ph = print_handler.ph()
     plr = prod_links_retriever.link_retriever()
-    URLs = plr.fetch_and_check_products(driver)
+    URLs = plr.fetch_and_check_products(driver, skip_collection)
     print("Hold escape to exit the program. ")
     chunk_size = 3
     driver.quit()

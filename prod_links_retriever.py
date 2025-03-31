@@ -100,16 +100,20 @@ class link_retriever:
         
         return list(existing_urls)
                         
-    def fetch_and_check_products(self, driver):
+    def fetch_and_check_products(self, driver, skip_collection=False):
+        if skip_collection:
+            print("Skipping product collection.")
+            return self.save_and_load_urls_to_file([], 'backup_urls.json')
+
         # define search terms
         ti_search_query = "5070ti"
-        self.get_bestbuy_product_links(driver, ti_search_query)
-        self.get_amazon_product_links(driver, ti_search_query)
         self.get_newegg_product_links(driver, ti_search_query)
+        self.get_bestbuy_product_links(driver, ti_search_query)
+        self.get_amazon_product_links(driver, ti_search_query) 
         xt_search_query = "9070xt"
+        self.get_newegg_product_links(driver, xt_search_query)
         self.get_bestbuy_product_links(driver, xt_search_query)
         self.get_amazon_product_links(driver, xt_search_query)
-        self.get_newegg_product_links(driver, xt_search_query)
         for url in urls:
             time.sleep(random.random() * 0.1)  # dont spam with requests
             url = self.trim_url(url)
@@ -123,11 +127,10 @@ class link_retriever:
     
     def is_not_PC(self, title):
         # Use regular expression to ensure the title doesn't contain "pc" or "gaming pc"
-        invalid_keywords = [r"\bgaming pc\b", r"\bdesktop\b", r"\bcomputer\b", r"\bcable\b", r"\blaptop\b"]
+        invalid_keywords = [r"\bgaming pc\b", r"\bdesktop\b", r"\bcomputer\b", r"\bcable\b", r"\blaptop\b", r"\bcord\b"]
         return not any(re.search(keyword, title) for keyword in invalid_keywords)
     
     def trim_url(self, url):
         # Remove query parameters from the URL
         parsed_url = urllib.parse.urlparse(url)
-
-        return urllib.parse.urlunparse(parsed_url._replace(query='', fragment=''))
+        return urllib.parse.urlunparse(parsed_url._replace(query='', fragment='', params=''))
