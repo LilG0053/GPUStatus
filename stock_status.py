@@ -136,7 +136,8 @@ def create_driver():
 def process_product_chunk(driver, chunk, ph):
     driver = create_driver()  # Create one driver per chunk
     while True:
-        for URL in chunk:
+        for i, URL in enumerate(chunk):
+            print("debug index: " + str(i))
             print(f"Checking {URL}...") 
             checkEsc()
             if exit_event.is_set():
@@ -149,17 +150,17 @@ def process_product_chunk(driver, chunk, ph):
             if not prod.name or prod.price == "." or prod.unavailable:
                 ph.printNotAvailable(prod.name)
             elif (int(prod.price.split(".")[0].replace(",", "")) < 1200) and (prod.unavailable == False) and ("5080" in prod.name.split(" ")):
-                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."), URL)
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
-                print("Sending bot message...")
+                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
+                print("Sending bot message for 5080...")
             elif (int(prod.price.split(".")[0].replace(",", "")) < 890) and (prod.unavailable == False) and ("9070" in prod.name.split(" ") or "9070XT" in prod.name.split(" ") or "9070 XT" in prod.name.split(" ")):
-                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."), URL)
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
-                print("Sending bot message...")
+                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
+                print("Sending bot message for 7090XT...")
             elif (int(prod.price.split(".")[0].replace(",", "")) < 950) and (prod.unavailable == False):
-                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."), URL)
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
-                print("Sending bot message...")
+                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
+                print("Sending bot message for 5070ti with price: " + str(prod.price) + "...")
             else:
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
 

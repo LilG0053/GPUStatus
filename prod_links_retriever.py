@@ -97,7 +97,7 @@ class link_retriever:
             print(f"Added {len(new_urls_to_save)} new URLs to {filename}")
         else:
             print("No new URLs to save.")
-        
+
         return list(existing_urls)
                         
     def fetch_and_check_products(self, driver, skip_collection=False):
