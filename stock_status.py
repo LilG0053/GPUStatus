@@ -150,6 +150,9 @@ def process_product_chunk(driver, chunk, ph):
             prod = process_site(site, driver)
             if not prod.name or prod.price == "." or prod.unavailable:
                 ph.printNotAvailable(prod.name)
+            elif (int(prod.price.split(".")[0].replace(",", "")) < 1200) and (prod.unavailable == False) and ("5080" in prod.name.split(" ")):
+                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."))
+                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
             elif (int(prod.price.split(".")[0].replace(",", "")) < 890) and (prod.unavailable == False):
                 asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."))
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
