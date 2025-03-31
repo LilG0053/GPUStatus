@@ -6,7 +6,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from etext import send_sms_via_email
 import prod_links_retriever
-import requests
 import asyncio
 import bcolors as colors
 import print_handler
@@ -100,7 +99,6 @@ def process_site(site, driver):
         unavailable = driver.find_element(By.CLASS_NAME, "message-information").text
         prod = p.product(product_name, price, unavailable)
     elif site == "bestbuy":
-        print("processing bestbuy")
         try:
             time.sleep(1)
             raw_product_name = WebDriverWait(driver, 5).until(
@@ -151,11 +149,17 @@ def process_product_chunk(driver, chunk, ph):
             if not prod.name or prod.price == "." or prod.unavailable:
                 ph.printNotAvailable(prod.name)
             elif (int(prod.price.split(".")[0].replace(",", "")) < 1200) and (prod.unavailable == False) and ("5080" in prod.name.split(" ")):
-                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."))
+                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."), URL)
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
-            elif (int(prod.price.split(".")[0].replace(",", "")) < 890) and (prod.unavailable == False):
-                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."))
+                print("Sending bot message...")
+            elif (int(prod.price.split(".")[0].replace(",", "")) < 890) and (prod.unavailable == False) and ("9070" in prod.name.split(" ") or "9070XT" in prod.name.split(" ") or "9070 XT" in prod.name.split(" ")):
+                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."), URL)
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
+                print("Sending bot message...")
+            elif (int(prod.price.split(".")[0].replace(",", "")) < 950) and (prod.unavailable == False):
+                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}."), URL)
+                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
+                print("Sending bot message...")
             else:
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
 
