@@ -8,7 +8,7 @@ from etext import send_sms_via_email
 import prod_links_retriever
 import asyncio
 import bcolors as colors
-import print_handler
+import logger
 import time
 import product as p
 import keyboard
@@ -107,8 +107,16 @@ def process_site(site, driver):
         except:
             print("Unable to find product name on Best Buy page.")
         product_name = raw_product_name.replace("(", "").replace(")", "").replace(",", "").replace("-", "")
-        price = driver.find_element(By.CLASS_NAME, "priceView-hero-price").find_element(By.TAG_NAME, "span").text
-        btn_text = driver.find_element(By.XPATH, "//button[contains(@class, 'add-to-cart-button')]").text
+        try:
+            price = WebDriverWait(driver, 1). EC.visibility_of_element_located((By.CLASS_NAME, "priceView-hero-price")).find_element(By.TAG_NAME, "span").text
+        except:
+            price = price = WebDriverWait(driver, 1). EC.visibility_of_element_located((By.ID, "large-customer-price")).find_element(By.TAG_NAME, "span").text
+            print("bestbu issue, popup?")
+        try:
+            btn_text = driver.find_element(By.XPATH, "//button[contains(@class, 'add-to-cart-button')]").text
+        except:
+            print("button not found Bestbuy")
+            btn_text = driver.find_element(By.XPATH, "//button[contains(@class, 'c-button-primary')]").text
         unavailable = btn_text == "Coming Soon" or btn_text == "Unavailable Nearby" or btn_text == "Sold Out"
         prod = p.product(product_name, price, unavailable)
     else:
@@ -129,7 +137,7 @@ def create_driver():
     options.set_preference("dom.push.enabled", False)
     options.set_preference("dom.webnotifications.enabled", False)  # Disable notifications
     options.set_preference("dom.webdriver.enabled", False)  # Disable webdriver flag
-    #options.set_preference("permissions.default.image", 2)  # Disable webdriver flag
+    options.set_preference("permissions.default.image", 2)  # Disable webdriver flag
     options.add_argument(f"user-agent={random.choice(user_agents)}")
     return webdriver.Firefox(options=options)
 
@@ -157,32 +165,14 @@ def process_product_chunk(driver, chunk, ph):
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
                 asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
                 print("Sending bot message for 7090XT...")
-            elif (int(prod.price.split(".")[0].replace(",", "")) < 950) and (prod.unavailable == False):
+            elif (int(prod.price.split(".")[0].replace(",", "")) < 900) and (prod.unavailable == False):
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
                 asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
                 print("Sending bot message for 5070ti with price: " + str(prod.price) + "...")
             else:
                 print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
 
-#options.add_argument("--headless")
-# options.set_preference("permissions.default.image", 2)  # Disable images
-# options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", "false")  # Disable flash
-
-def main():
-    skip_collection = False
-    #if argument is passed, skip the collection of product links
-    if sys.argv[1] == "SKIP":
-        skip_collection = True
-        
-    asyncio.run(gpu_discord_bot.send_discord_message("Scanning for GPUs..."))
-    driver = create_driver()
-    atexit.register(exit_handler)
-    ph = print_handler.ph()
-    plr = prod_links_retriever.link_retriever()
-    URLs = plr.fetch_and_check_products(driver, skip_collection)
-    print("Hold escape to exit the program. ")
-    chunk_size = 3
-    driver.quit()
+def execute_concurrent_processing(driver, ph, URLs, chunk_size):
     with concurrent.futures.ThreadPoolExecutor(max_workers=chunk_size) as executor:
         while True:
             if exit_event.is_set():  # Check if exit event is triggered
@@ -196,8 +186,31 @@ def main():
             # Wait for all futures to complete
             concurrent.futures.wait(futures)
             time.sleep(1)
-    print("All threads have finished. Exiting the program.")
     
+    
+#options.add_argument("--headless")
+# options.set_preference("permissions.default.image", 2)  # Disable images
+# options.set_preference("dom.ipc.plugins.enabled.libflashplayer.so", "false")  # Disable flash
+
+def main():
+    skip_collection = False
+    #if argument is passed, skip the collection of product links
+    if sys.argv[1] == "SKIP":
+        skip_collection = True
+        
+    asyncio.run(gpu_discord_bot.send_discord_message("Scanning for GPUs..."))
+    driver = create_driver()
+    atexit.register(exit_handler)
+    ph = logger.ph()
+    plr = prod_links_retriever.link_retriever()
+    URLs = plr.fetch_and_check_products(driver, skip_collection)
+    print("Hold escape to exit the program. ")
+    chunk_size = 3
+    driver.quit()
+    execute_concurrent_processing(driver, ph, URLs, chunk_size)
+    print("All threads have finished. Exiting the program.")
+
+
 if __name__ == "__main__":
     main()
                 
