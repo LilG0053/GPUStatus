@@ -53,72 +53,82 @@ def get_site_name(url):
 def strip_non_unicode(text):
     return ''.join([i if ord(i) < 128 else ' ' for i in text])
 
-def process_site(site, driver):
-    if site == "amazon":
-        try:
-            time.sleep(0.746)
-            raw_product_name = WebDriverWait(driver, 1).until(
+def scrape_amazon(driver):
+    try:
+        time.sleep(0.746)
+        raw_product_name = WebDriverWait(driver, 1).until(
                         EC.visibility_of_element_located((By.ID, "title"))
                     ).text
-        except:
-            raw_product_name = WebDriverWait(driver, 1).until(
+    except:
+        raw_product_name = WebDriverWait(driver, 1).until(
                         EC.visibility_of_element_located((By.TAG_NAME, "title"))
                     ).text
         #strip product name of weird characters
-        product_name = raw_product_name.replace("(", "").replace(")", "").replace(",", "")
-        price_whole = driver.find_element(By.CLASS_NAME, "a-price-whole").text
-        price_frac = driver.find_element(By.CLASS_NAME, "a-price-fraction").text
+    product_name = raw_product_name.replace("(", "").replace(")", "").replace(",", "")
+    price_whole = driver.find_element(By.CLASS_NAME, "a-price-whole").text
+    price_frac = driver.find_element(By.CLASS_NAME, "a-price-fraction").text
         #check if theres a learn more button, if so, product is unavailable
-        unavailable = driver.find_elements(By.ID, "fod-cx-message-with-learn-more")
-        if not unavailable:
-            try:
-                unavailable = WebDriverWait(driver, 0).until(
+    unavailable = driver.find_elements(By.ID, "fod-cx-message-with-learn-more")
+    if not unavailable:
+        try:
+            unavailable = WebDriverWait(driver, 0).until(
                     EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'Currently unavailable.')]"))
                 ).text
-            except:
-                unavailable = False
-        prod = p.product(product_name, price_whole + "." + price_frac, unavailable)
-    elif site == "newegg":
-        try:
-            time.sleep(1)
-            raw_product_name = WebDriverWait(driver, 1).until(
-                            EC.visibility_of_element_located((By.CLASS_NAME, "product-title"))).text
         except:
+            unavailable = False
+    return p.product(product_name, price_whole + "." + price_frac, unavailable)
+    
+def scrape_newegg(driver):
+    try:
+        time.sleep(1)
+        raw_product_name = WebDriverWait(driver, 1).until(
+                            EC.visibility_of_element_located((By.CLASS_NAME, "product-title"))).text
+    except:
             #captcha is present, need to solve it
-            time.sleep(random.random() * 2)
-            actions = ActionChains(driver)
-            captcha_box = driver.find_element(By.NAME, "check")
+        time.sleep(random.random() * 2)
+        actions = ActionChains(driver)
+        captcha_box = driver.find_element(By.NAME, "check")
             #moving mouse to captcha box and clicking it actually solves the captcha
-            actions.move_to_element(captcha_box).click().perform()
-            time.sleep(20)
-            raw_product_name = WebDriverWait(driver, 7).until(
+        actions.move_to_element(captcha_box).click().perform()
+        time.sleep(20)
+        raw_product_name = WebDriverWait(driver, 7).until(
                             EC.visibility_of_element_located((By.CLASS_NAME, "product-title"))).text
         #strip product name of weird characters
-        product_name = raw_product_name.replace("(", "").replace(")", "").replace(",", "")
-        price = driver.find_element(By.CLASS_NAME, "price-current").find_element(By.TAG_NAME, "strong").text
-        unavailable = driver.find_element(By.CLASS_NAME, "message-information").text
-        prod = p.product(product_name, price, unavailable)
-    elif site == "bestbuy":
-        try:
-            time.sleep(1)
-            raw_product_name = WebDriverWait(driver, 5).until(
+    product_name = raw_product_name.replace("(", "").replace(")", "").replace(",", "")
+    price = driver.find_element(By.CLASS_NAME, "price-current").find_element(By.TAG_NAME, "strong").text
+    unavailable = driver.find_element(By.CLASS_NAME, "message-information").text
+    return p.product(product_name, price, unavailable)
+
+def scrape_bestbuy(driver):
+    try:
+        time.sleep(1)
+        raw_product_name = WebDriverWait(driver, 5).until(
                         EC.visibility_of_element_located((By.TAG_NAME, "h1"))
                     ).text
-        except:
-            print("Unable to find product name on Best Buy page.")
-        product_name = raw_product_name.replace("(", "").replace(")", "").replace(",", "").replace("-", "")
-        try:
-            price = WebDriverWait(driver, 1). EC.visibility_of_element_located((By.CLASS_NAME, "priceView-hero-price")).find_element(By.TAG_NAME, "span").text
-        except:
-            price = price = WebDriverWait(driver, 1). EC.visibility_of_element_located((By.ID, "large-customer-price")).find_element(By.TAG_NAME, "span").text
-            print("bestbu issue, popup?")
-        try:
-            btn_text = driver.find_element(By.XPATH, "//button[contains(@class, 'add-to-cart-button')]").text
-        except:
-            print("button not found Bestbuy")
-            btn_text = driver.find_element(By.XPATH, "//button[contains(@class, 'c-button-primary')]").text
-        unavailable = btn_text == "Coming Soon" or btn_text == "Unavailable Nearby" or btn_text == "Sold Out"
-        prod = p.product(product_name, price, unavailable)
+    except:
+        print("Unable to find product name on Best Buy page.")
+    product_name = raw_product_name.replace("(", "").replace(")", "").replace(",", "").replace("-", "")
+    try:
+        price = WebDriverWait(driver, 1). EC.visibility_of_element_located((By.CLASS_NAME, "priceView-hero-price")).find_element(By.TAG_NAME, "span").text
+    except:
+        price = price = WebDriverWait(driver, 1). EC.visibility_of_element_located((By.ID, "large-customer-price")).find_element(By.TAG_NAME, "span").text
+        print("bestbu issue, popup?")
+    try:
+        btn_text = driver.find_element(By.XPATH, "//button[contains(@class, 'add-to-cart-button')]").text
+    except:
+        print("button not found Bestbuy")
+        btn_text = driver.find_element(By.XPATH, "//button[contains(@class, 'c-button-primary')]").text
+    unavailable = btn_text == "Coming Soon" or btn_text == "Unavailable Nearby" or btn_text == "Sold Out"
+    prod = p.product(product_name, price, unavailable)
+    return prod
+
+def process_site(site, driver):
+    if site == "amazon":
+        prod = scrape_amazon(driver)
+    elif site == "newegg":
+        prod = scrape_newegg(driver)
+    elif site == "bestbuy":
+        prod = scrape_bestbuy(driver)
     else:
         raise Exception("Unknown site for site name: " + site)
     return prod
@@ -141,6 +151,25 @@ def create_driver():
     options.add_argument(f"user-agent={random.choice(user_agents)}")
     return webdriver.Firefox(options=options)
 
+def product_communication(ph, URL, prod):
+    #OO abuser, fix this later
+    if not prod.name or prod.price == "." or prod.unavailable:
+        ph.printNotAvailable(prod.name)
+    elif (int(prod.price.split(".")[0].replace(",", "")) < 1200) and (prod.unavailable == False) and ("5080" in prod.name.split(" ")):
+        print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
+        asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
+        print("Sending bot message for 5080...")
+    elif (int(prod.price.split(".")[0].replace(",", "")) < 890) and (prod.unavailable == False) and ("9070" in prod.name.split(" ") or "9070XT" in prod.name.split(" ") or "9070 XT" in prod.name.split(" ")):
+        print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
+        asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
+        print("Sending bot message for 7090XT...")
+    elif (int(prod.price.split(".")[0].replace(",", "")) < 900) and (prod.unavailable == False):
+        print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
+        asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
+        print("Sending bot message for 5070ti with price: " + str(prod.price) + "...")
+    else:
+        print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
+        
 def process_product_chunk(driver, chunk, ph):
     driver = create_driver()  # Create one driver per chunk
     while True:
@@ -155,22 +184,7 @@ def process_product_chunk(driver, chunk, ph):
             site = get_site_name(URL)
             driver.get(URL)
             prod = process_site(site, driver)
-            if not prod.name or prod.price == "." or prod.unavailable:
-                ph.printNotAvailable(prod.name)
-            elif (int(prod.price.split(".")[0].replace(",", "")) < 1200) and (prod.unavailable == False) and ("5080" in prod.name.split(" ")):
-                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
-                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
-                print("Sending bot message for 5080...")
-            elif (int(prod.price.split(".")[0].replace(",", "")) < 890) and (prod.unavailable == False) and ("9070" in prod.name.split(" ") or "9070XT" in prod.name.split(" ") or "9070 XT" in prod.name.split(" ")):
-                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
-                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
-                print("Sending bot message for 7090XT...")
-            elif (int(prod.price.split(".")[0].replace(",", "")) < 900) and (prod.unavailable == False):
-                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
-                asyncio.run(gpu_discord_bot.send_discord_message(f"GPU ALERT: {URL}. Product: {prod.name}.", URL))
-                print("Sending bot message for 5070ti with price: " + str(prod.price) + "...")
-            else:
-                print(f"{colors.OKGREEN}Product is available{colors.ENDC}: {prod.name} for {colors.OKCYAN}${prod.price}{colors.ENDC}. Find it here: {URL}")
+            product_communication(ph, URL, prod)
 
 def execute_concurrent_processing(driver, ph, URLs, chunk_size):
     with concurrent.futures.ThreadPoolExecutor(max_workers=chunk_size) as executor:
